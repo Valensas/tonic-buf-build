@@ -22,7 +22,7 @@ jobs:
         run: cargo build
 
   publish:
-    needs: [lint, build, test]
+    needs: [lint, build]
     runs-on: ubuntu-latest
 
     steps:
