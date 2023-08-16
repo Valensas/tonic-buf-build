@@ -1,0 +1,15 @@
+syntax = "proto3";
+package tonic_buf_build_sample;
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+
+service HelloService {
+  rpc SayHello(google.protobuf.Empty) returns (SayHelloResponse) {
+    option (google.api.http) = {get: "/hello"};
+  }
+}
+
+message SayHelloResponse {
+  string value = 1;
+}
