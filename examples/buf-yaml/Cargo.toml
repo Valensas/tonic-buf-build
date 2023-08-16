@@ -9,5 +9,5 @@ tokio = {version = "1.28.2", features = ["full"]}
 prost = "0.11.9"
 
 [build-dependencies]
-tonic_buf_build = {path = "../../"}
+tonic-buf-build = {path = "../../"}
 tonic-build = "*"

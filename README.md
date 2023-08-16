@@ -9,7 +9,7 @@ Works with both [buf.yaml](https://buf.build/docs/configuration/v1/buf-yaml) and
 Add the following to your Cargo.toml:
 
 ```toml
-tonic_buf_build = {path = "../../"}
+tonic-buf-build = "*"
 tonic-build = "*"
 ```
 
