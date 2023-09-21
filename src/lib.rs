@@ -39,7 +39,8 @@ fn tempdir() -> std::path::PathBuf {
 }
 
 pub fn compile_from_buf_workspace(
-    tonic_builder: tonic_build::Builder, config: Option<prost_build::Config>,
+    tonic_builder: tonic_build::Builder,
+    config: Option<prost_build::Config>,
 ) -> Result<(), TonicBufBuildError> {
     let export_dir = tempdir();
     defer! {
@@ -67,7 +68,8 @@ pub fn compile_from_buf_workspace(
 }
 
 pub fn compile_from_buf(
-    tonic_builder: tonic_build::Builder, config: Option<prost_build::Config>,
+    tonic_builder: tonic_build::Builder,
+    config: Option<prost_build::Config>,
 ) -> Result<(), TonicBufBuildError> {
     let export_dir = tempdir();
     defer! {
