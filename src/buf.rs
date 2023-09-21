@@ -14,8 +14,9 @@ impl BufYaml {
         let f = std::fs::File::open(file)
             .map_err(|e| TonicBufBuildError::new(&format!("failed to read {}", file), e.into()))?;
 
-        let buf: BufYaml = serde_yaml::from_reader(&f)
-            .map_err(|e| TonicBufBuildError::new(&format!("failed to deserialize {}", file), e.into()))?;
+        let buf: BufYaml = serde_yaml::from_reader(&f).map_err(|e| {
+            TonicBufBuildError::new(&format!("failed to deserialize {}", file), e.into())
+        })?;
         Ok(buf)
     }
 }
@@ -30,8 +31,9 @@ impl BufWorkYaml {
         let buf_work_file = std::fs::File::open(file)
             .map_err(|e| TonicBufBuildError::new(&format!("failed to read {}", file), e.into()))?;
 
-        let buf_work: BufWorkYaml = serde_yaml::from_reader(&buf_work_file)
-            .map_err(|e| TonicBufBuildError::new(&format!("failed to deserialize {}", file), e.into()))?;
+        let buf_work: BufWorkYaml = serde_yaml::from_reader(&buf_work_file).map_err(|e| {
+            TonicBufBuildError::new(&format!("failed to deserialize {}", file), e.into())
+        })?;
 
         Ok(buf_work)
     }
@@ -87,7 +89,10 @@ pub(crate) fn export_all(buf: &BufYaml, export_dir: &Path) -> Result<(), TonicBu
     Ok(())
 }
 
-pub(crate) fn export_all_from_workspace(buf_work: &BufWorkYaml, export_dir: &Path) -> Result<(), TonicBufBuildError> {
+pub(crate) fn export_all_from_workspace(
+    buf_work: &BufWorkYaml,
+    export_dir: &Path,
+) -> Result<(), TonicBufBuildError> {
     if let Some(directories) = &buf_work.directories {
         for dir in directories {
             let buf = BufYaml::load(&format!("{}/buf.yaml", dir))?;
