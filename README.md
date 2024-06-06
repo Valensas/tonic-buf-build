@@ -25,3 +25,23 @@ fn main() -> Result<(), tonic_buf_build::error::TonicBufBuildError> {
 To use buf workspaces, simply call `tonic_buf_build::compile_from_buf_workspace` instead.
 
 For complete and working examples, take a look at the examples folder.
+
+When the buf files are not located not in the current directory, you can configure the *absolute* path to the directory, containing either `buf.yaml` or `buf.work.yaml`, and call the corresponding `tonic_buf_build::compile_from_buf_with_config` or `tonic_buf_build::compile_from_buf_workspace_with_config`.
+
+Consider the following build.rs where the workspace directory is located one level above the crate (a usual case for multilanguage clients with common protos)
+
+```rust
+use std::env;
+use std::path::PathBuf;
+
+fn main() -> Result<(), tonic_buf_build::error::TonicBufBuildError> {
+    let mut path = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
+    path.pop();
+    tonic_buf_build::compile_from_buf_workspace_with_config(
+        tonic_build::configure(),
+        None,
+        tonic_buf_build::TonicBufConfig{buf_dir: Some(path)},
+    )?;
+    Ok(())
+}
+```

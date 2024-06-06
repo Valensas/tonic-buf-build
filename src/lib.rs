@@ -28,37 +28,60 @@
 
 use error::TonicBufBuildError;
 use scopeguard::defer;
+use std::path::{Path, PathBuf};
 
 mod buf;
 pub mod error;
 
-fn tempdir() -> std::path::PathBuf {
+fn tempdir() -> PathBuf {
     let mut temp_dir = std::env::temp_dir();
     temp_dir.push(uuid::Uuid::new_v4().to_string());
     temp_dir
+}
+
+#[derive(Default)]
+pub struct TonicBufConfig<P: AsRef<Path> = &'static str> {
+    pub buf_dir: Option<P>,
 }
 
 pub fn compile_from_buf_workspace(
     tonic_builder: tonic_build::Builder,
     config: Option<prost_build::Config>,
 ) -> Result<(), TonicBufBuildError> {
+    compile_from_buf_workspace_with_config::<&'static str>(
+        tonic_builder,
+        config,
+        TonicBufConfig::default(),
+    )
+}
+
+pub fn compile_from_buf_workspace_with_config<P: AsRef<Path>>(
+    tonic_builder: tonic_build::Builder,
+    config: Option<prost_build::Config>,
+    tonic_buf_config: TonicBufConfig<P>,
+) -> Result<(), TonicBufBuildError> {
     let export_dir = tempdir();
     defer! {
         // This is just cleanup, it's not important if it fails
         let _ = std::fs::remove_dir(&export_dir);
     }
+    let buf_dir = tonic_buf_config
+        .buf_dir
+        .as_ref()
+        .map(|p| p.as_ref())
+        .unwrap_or(".".as_ref());
+    let mut buf_work_file = PathBuf::from(buf_dir);
+    buf_work_file.push("buf.work.yaml");
+    let buf_work = buf::BufWorkYaml::load(buf_work_file.as_path())?;
 
-    let buf_work = buf::BufWorkYaml::load("buf.work.yaml")?;
-
-    buf::export_all_from_workspace(&buf_work, &export_dir)?;
-    let buf_work_directories = buf_work.directories.unwrap_or_default();
-    let mut includes = vec![export_dir.to_str().unwrap().to_string()];
+    let buf_work_directories = buf::export_all_from_workspace(&buf_work, &export_dir, buf_dir)?;
+    let mut includes = vec![export_dir.clone()];
 
     for dep in buf_work_directories {
         includes.push(dep);
     }
 
-    let protos = buf::ls_files()?;
+    let protos = buf::ls_files(buf_dir)?;
 
     match config {
         None => tonic_builder.compile(&protos, &includes),
@@ -71,16 +94,31 @@ pub fn compile_from_buf(
     tonic_builder: tonic_build::Builder,
     config: Option<prost_build::Config>,
 ) -> Result<(), TonicBufBuildError> {
+    compile_from_buf_with_config::<&'static str>(tonic_builder, config, TonicBufConfig::default())
+}
+
+pub fn compile_from_buf_with_config<P: AsRef<Path>>(
+    tonic_builder: tonic_build::Builder,
+    config: Option<prost_build::Config>,
+    tonic_buf_config: TonicBufConfig<P>,
+) -> Result<(), TonicBufBuildError> {
     let export_dir = tempdir();
     defer! {
         // This is just cleanup, it's not important if it fails
         let _ = std::fs::remove_dir(&export_dir);
     }
-    let buf = buf::BufYaml::load("buf.yaml")?;
+    let buf_dir = tonic_buf_config
+        .buf_dir
+        .as_ref()
+        .map(|p| p.as_ref())
+        .unwrap_or(".".as_ref());
+    let mut buf_file = PathBuf::from(buf_dir);
+    buf_file.push("buf.yaml");
+    let buf = buf::BufYaml::load(buf_file.as_path())?;
 
     buf::export_all(&buf, &export_dir)?;
-    let protos = buf::ls_files()?;
-    let includes = [".", export_dir.to_str().unwrap()];
+    let protos = buf::ls_files(buf_dir)?;
+    let includes = [buf_dir, &export_dir];
 
     match config {
         None => tonic_builder.compile(&protos, &includes),
