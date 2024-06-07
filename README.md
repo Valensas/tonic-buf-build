@@ -26,9 +26,9 @@ To use buf workspaces, simply call `tonic_buf_build::compile_from_buf_workspace`
 
 For complete and working examples, take a look at the examples folder.
 
-When the buf files are not located not in the current directory, you can configure the *absolute* path to the directory, containing either `buf.yaml` or `buf.work.yaml`, and call the corresponding `tonic_buf_build::compile_from_buf_with_config` or `tonic_buf_build::compile_from_buf_workspace_with_config`.
+When the buf files are not located in the current directory, you can configure the *absolute* path to the directory, containing either `buf.yaml` or `buf.work.yaml`, and call the corresponding `tonic_buf_build::compile_from_buf_with_config` or `tonic_buf_build::compile_from_buf_workspace_with_config`.
 
-Consider the following build.rs where the workspace directory is located one level above the crate (a usual case for multilanguage clients with common protos)
+Consider the following build.rs where the buf workspace directory is located one level above the crate (a usual case for multilanguage clients with common protos)
 
 ```rust
 use std::env;
