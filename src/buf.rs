@@ -1,4 +1,5 @@
-use std::path::Path;
+use std::ffi::OsStr;
+use std::path::{Path, PathBuf};
 
 use serde::Deserialize;
 
@@ -10,12 +11,16 @@ pub(crate) struct BufYaml {
 }
 
 impl BufYaml {
-    pub(crate) fn load(file: &str) -> Result<BufYaml, TonicBufBuildError> {
-        let f = std::fs::File::open(file)
-            .map_err(|e| TonicBufBuildError::new(&format!("failed to read {}", file), e.into()))?;
+    pub(crate) fn load(file: &Path) -> Result<BufYaml, TonicBufBuildError> {
+        let f = std::fs::File::open(file).map_err(|e| {
+            TonicBufBuildError::new(&format!("failed to read {:?}", file.as_os_str()), e.into())
+        })?;
 
         let buf: BufYaml = serde_yaml::from_reader(&f).map_err(|e| {
-            TonicBufBuildError::new(&format!("failed to deserialize {}", file), e.into())
+            TonicBufBuildError::new(
+                &format!("failed to deserialize {:?}", file.as_os_str()),
+                e.into(),
+            )
         })?;
         Ok(buf)
     }
@@ -27,21 +32,25 @@ pub(crate) struct BufWorkYaml {
 }
 
 impl BufWorkYaml {
-    pub(crate) fn load(file: &str) -> Result<Self, TonicBufBuildError> {
-        let buf_work_file = std::fs::File::open(file)
-            .map_err(|e| TonicBufBuildError::new(&format!("failed to read {}", file), e.into()))?;
+    pub(crate) fn load(file: &Path) -> Result<Self, TonicBufBuildError> {
+        let buf_work_file = std::fs::File::open(file).map_err(|e| {
+            TonicBufBuildError::new(&format!("failed to read {:?}", file.as_os_str()), e.into())
+        })?;
 
         let buf_work: BufWorkYaml = serde_yaml::from_reader(&buf_work_file).map_err(|e| {
-            TonicBufBuildError::new(&format!("failed to deserialize {}", file), e.into())
+            TonicBufBuildError::new(
+                &format!("failed to deserialize {:?}", file.as_os_str()),
+                e.into(),
+            )
         })?;
 
         Ok(buf_work)
     }
 }
 
-pub(crate) fn ls_files() -> Result<Vec<String>, TonicBufBuildError> {
+pub(crate) fn ls_files(proto_path: &Path) -> Result<Vec<String>, TonicBufBuildError> {
     let child = std::process::Command::new("buf")
-        .args(["ls-files"])
+        .args([OsStr::new("ls-files"), proto_path.as_os_str()])
         .output()
         .map_err(|e| TonicBufBuildError::new("failed to execute `buf ls-files'", e.into()))?;
 
@@ -92,12 +101,20 @@ pub(crate) fn export_all(buf: &BufYaml, export_dir: &Path) -> Result<(), TonicBu
 pub(crate) fn export_all_from_workspace(
     buf_work: &BufWorkYaml,
     export_dir: &Path,
-) -> Result<(), TonicBufBuildError> {
+    workspace_dir: &Path,
+) -> Result<Vec<PathBuf>, TonicBufBuildError> {
+    let mut buf_dirs = vec![];
     if let Some(directories) = &buf_work.directories {
         for dir in directories {
-            let buf = BufYaml::load(&format!("{}/buf.yaml", dir))?;
+            let mut buf_dir = PathBuf::from(workspace_dir);
+            buf_dir.push(dir);
+            buf_dirs.push(buf_dir.clone());
+            buf_dir.push("buf.yaml");
+
+            let buf = BufYaml::load(buf_dir.as_path())?;
+
             export_all(&buf, export_dir)?;
         }
     }
-    Ok(())
+    Ok(buf_dirs)
 }
