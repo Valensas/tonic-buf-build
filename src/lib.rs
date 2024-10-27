@@ -84,8 +84,8 @@ pub fn compile_from_buf_workspace_with_config<P: AsRef<Path>>(
     let protos = buf::ls_files(buf_dir)?;
 
     match config {
-        None => tonic_builder.compile(&protos, &includes),
-        Some(config) => tonic_builder.compile_with_config(config, &protos, &includes),
+        None => tonic_builder.compile_protos(&protos, &includes),
+        Some(config) => tonic_builder.compile_protos_with_config(config, &protos, &includes),
     }
     .map_err(|e| TonicBufBuildError::new("error running tonic build", e.into()))
 }
@@ -121,8 +121,8 @@ pub fn compile_from_buf_with_config<P: AsRef<Path>>(
     let includes = [buf_dir, &export_dir];
 
     match config {
-        None => tonic_builder.compile(&protos, &includes),
-        Some(config) => tonic_builder.compile_with_config(config, &protos, &includes),
+        None => tonic_builder.compile_protos(&protos, &includes),
+        Some(config) => tonic_builder.compile_protos_with_config(config, &protos, &includes),
     }
     .map_err(|e| TonicBufBuildError::new("error running tonic build", e.into()))
 }

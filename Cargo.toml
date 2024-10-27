@@ -1,6 +1,6 @@
 [package]
 name = "tonic-buf-build"
-version = "0.2.1"
+version = "0.3.0"
 edition = "2021"
 description = "A build helper that integrates buf.build to tonic-build."
 license = "MIT"
@@ -9,9 +9,9 @@ repository = "https://github.com/Valensas/tonic-buf-build"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-tonic-build = "0.11"
+tonic-build = "0.12"
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.9"
-uuid = { version = "1.2", features = ["v4", "fast-rng"] }
-prost-build = "0.12"
+uuid = { version = "1.10", features = ["v4", "fast-rng"] }
+prost-build = "0.13"
 scopeguard = "1.2"
