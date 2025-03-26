@@ -1,10 +1,10 @@
 [package]
 name = "buf-yaml"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 
 [dependencies]
-tonic = {version = "0.12.3", features = ["tls"]}
+tonic = "0.13"
 tokio = {version = "1.40.0", features = ["full"]}
 prost = "0.13.3"
 
