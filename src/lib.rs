@@ -46,7 +46,7 @@ pub struct TonicBufConfig<P: AsRef<Path> = &'static str> {
 
 pub fn compile_from_buf_workspace(
     tonic_builder: tonic_build::Builder,
-    config: Option<prost_build::Config>,
+    config: Option<tonic_build::Config>,
 ) -> Result<(), TonicBufBuildError> {
     compile_from_buf_workspace_with_config::<&'static str>(
         tonic_builder,
@@ -57,7 +57,7 @@ pub fn compile_from_buf_workspace(
 
 pub fn compile_from_buf_workspace_with_config<P: AsRef<Path>>(
     tonic_builder: tonic_build::Builder,
-    config: Option<prost_build::Config>,
+    config: Option<tonic_build::Config>,
     tonic_buf_config: TonicBufConfig<P>,
 ) -> Result<(), TonicBufBuildError> {
     let export_dir = tempdir();
@@ -81,7 +81,11 @@ pub fn compile_from_buf_workspace_with_config<P: AsRef<Path>>(
         includes.push(dep);
     }
 
-    let protos = buf::ls_files(buf_dir)?;
+    let protos = includes
+        .iter()
+        .filter_map(|exp_dir| buf::ls_files(&exp_dir).ok())
+        .flatten()
+        .collect::<Vec<_>>();
 
     match config {
         None => tonic_builder.compile_protos(&protos, &includes),
@@ -92,14 +96,14 @@ pub fn compile_from_buf_workspace_with_config<P: AsRef<Path>>(
 
 pub fn compile_from_buf(
     tonic_builder: tonic_build::Builder,
-    config: Option<prost_build::Config>,
+    config: Option<tonic_build::Config>,
 ) -> Result<(), TonicBufBuildError> {
     compile_from_buf_with_config::<&'static str>(tonic_builder, config, TonicBufConfig::default())
 }
 
 pub fn compile_from_buf_with_config<P: AsRef<Path>>(
     tonic_builder: tonic_build::Builder,
-    config: Option<prost_build::Config>,
+    config: Option<tonic_build::Config>,
     tonic_buf_config: TonicBufConfig<P>,
 ) -> Result<(), TonicBufBuildError> {
     let export_dir = tempdir();
@@ -117,7 +121,7 @@ pub fn compile_from_buf_with_config<P: AsRef<Path>>(
     let buf = buf::BufYaml::load(buf_file.as_path())?;
 
     buf::export_all(&buf, &export_dir)?;
-    let protos = buf::ls_files(buf_dir)?;
+    let protos = buf::ls_files(&export_dir)?;
     let includes = [buf_dir, &export_dir];
 
     match config {
